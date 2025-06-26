@@ -25,6 +25,7 @@ coins = []
 finishzone = Finishzone.Finishzone(0, 0)
 barrels = []
 enemies = []
+
 walls = []
 bombs = []
 loot_list = []
