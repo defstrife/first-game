@@ -25,12 +25,12 @@ coins = []
 finishzone = Finishzone.Finishzone(0, 0)
 barrels = []
 enemies = []
-
 walls = []
 bombs = []
 loot_list = []
 not_picked_up_loot = []
 current_level = 1
+player = Player.Player(0, 0, 50, 50)
 
 for i in range(0, int(WIDTH/50)):
     walls.append(Wall.Wall(i*100, 0))
