@@ -23,6 +23,7 @@ hearts = 2
 spikes = []
 coins = []
 finishzone = Finishzone.Finishzone(0, 0)
+player = Player.Player(0, 0, 50, 50)
 barrels = []
 enemies = []
 walls = []
@@ -30,7 +31,6 @@ bombs = []
 loot_list = []
 not_picked_up_loot = []
 current_level = 1
-player = Player.Player(0, 0, 50, 50)
 
 for i in range(0, int(WIDTH/50)):
     walls.append(Wall.Wall(i*100, 0))
@@ -40,7 +40,6 @@ for i in range(0, int(HEIGHT/50)):
     walls.append(Wall.Wall(0, i*100))
     walls.append(Wall.Wall(800, i*100))
 
-player = Player.Player(100, 100, 50, 50)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Game")
 running = True
@@ -76,6 +75,7 @@ def load_level(level_number):
             barrels.append(Barrel.Barrel(*barrel_info[:2], loot_type = barrel_info[2]))
 
     finishzone.rect.x, finishzone.rect.y = level["finishzoneX"], level["finishzoneY"]
+    player.rect.x, player.rect.y = level["playerstartX"], level["playerstartY"]
 
 def damage(hearts):
     font = pygame.font.Font(None, 36)
