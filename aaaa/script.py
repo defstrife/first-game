@@ -19,7 +19,7 @@ score = 0
 hearts = 2
 
 
-
+start_position = []
 spikes = []
 coins = []
 finishzone = Finishzone.Finishzone(0, 0)
@@ -31,14 +31,10 @@ bombs = []
 loot_list = []
 not_picked_up_loot = []
 current_level = 1
+sublevels = []
+start_position_x = 0
+start_position_y = 0
 
-for i in range(0, int(WIDTH/50)):
-    walls.append(Wall.Wall(i*100, 0))
-    walls.append(Wall.Wall(i * 100, 600))
-
-for i in range(0, int(HEIGHT/50)):
-    walls.append(Wall.Wall(0, i*100))
-    walls.append(Wall.Wall(800, i*100))
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Game")
@@ -57,10 +53,21 @@ def load_level(level_number):
     if not level:
         raise ValueError(f"Level {level_number} does not exist.")
 
+    sublevels.clear()
+    walls.clear()
     spikes.clear()
     coins.clear()
     barrels.clear()
     enemies.clear()
+    start_position.clear()
+
+    for i in range(0, int(WIDTH/50)):
+        walls.append(Wall.Wall(i*100, 0))
+        walls.append(Wall.Wall(i * 100, 600))
+
+    for i in range(0, int(HEIGHT/50)):
+        walls.append(Wall.Wall(0, i*100))
+        walls.append(Wall.Wall(800, i*100))
 
     for spike_pos in level["spikes"]:
         spikes.append(Spike.Spike(*spike_pos))
@@ -74,16 +81,32 @@ def load_level(level_number):
         else:
             barrels.append(Barrel.Barrel(*barrel_info[:2], loot_type = barrel_info[2]))
 
-    finishzone.rect.x, finishzone.rect.y = level["finishzoneX"], level["finishzoneY"]
+    if level["sublevels"]:
+        if "up" in level["sublevels"]:
+            walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y <= 0)]
+            sublevels.append(("up", level["sublevels"]["up"]))
+        if "down" in level["sublevels"]:
+            walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y >= 550)]
+            sublevels.append(("down", level["sublevels"]["down"]))
+
+    if level["finishzoneX"]:
+        finishzone.rect.x, finishzone.rect.y = level["finishzoneX"], level["finishzoneY"]
+
+    start_position.append(level["playerstartX"])
+    start_position.append(level["playerstartY"])
     player.rect.x, player.rect.y = level["playerstartX"], level["playerstartY"]
+    print(start_position_x, start_position_y)
+
+    for pos in start_position:
+        print(f"{pos}")
 
 def damage(hearts):
     font = pygame.font.Font(None, 36)
     score_text = font.render(f"Не молодец", True, (0, 0, 0))
     screen.blit(score_text, (200, 300))
     hearts -= 1
-    player.rect.x = 100
-    player.rect.y = 100
+    player.rect.x = start_position[0]
+    player.rect.y = start_position[1]
     if hearts <= 0:
         return hearts, False
     return hearts, True
@@ -118,7 +141,23 @@ while running:
             player.rect.x = 0
             player.rect.y = 0
 
+
+
     player.move()
+
+    for direction, level_number in sublevels:
+        if direction == "up" and player.rect.y <= 0:
+            current_level = level_number
+            load_level(current_level)
+        elif direction == "down" and player.rect.y >= HEIGHT - player.rect.height:
+            current_level = level_number
+            load_level(current_level)
+        elif direction == "left" and player.rect.y <= 0:
+            current_level = level_number
+            load_level(current_level)
+        elif direction == "right" and player.rect.y >= WIDTH - player.rect.height:
+            current_level = level_number
+            load_level(current_level)
 
     for spike in spikes:
         screen.blit(spike.image, (spike.rect.x, spike.rect.y))
