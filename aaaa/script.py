@@ -9,8 +9,12 @@ import barrel as Barrel
 import wall as Wall
 import heart as Heart
 import levels as Levels
+import sqlite3
+import databasemanager
 
 pygame.init()
+
+db_manager = databasemanager.DatabaseManager("game_database.db")
 
 WIDTH, HEIGHT = 800, 600
 speed = 5
@@ -46,6 +50,63 @@ clock = pygame.time.Clock()
 bombs = []
 font = pygame.font.Font(None, 36)
 enemies = [Enemy.Enemy(300, 300)]
+
+def load_level_from_db(level_number):
+    db_manager.cursor.execute("SELECT * FROM levels where id = ?", (level_number,))
+    level = db_manager.cursor.fetchone()
+    if not level:
+        raise ValueError(f"Level{level_number} does not exist.")
+    
+    sublevels.clear()
+    walls.clear()
+    spikes.clear()
+    coins.clear()
+    barrels.clear()
+    enemies.clear()
+    start_position.clear()
+
+    for i in range(0, int(WIDTH/50)):
+        walls.append(Wall.Wall(i*100, 0))
+        walls.append(Wall.Wall(i * 100, 600))
+
+    for i in range(0, int(HEIGHT/50)):
+        walls.append(Wall.Wall(0, i*100))
+        walls.append(Wall.Wall(800, i*100))
+
+    for spike_pos in level["spikes"]:
+        spikes.append(Spike.Spike(*spike_pos))
+    for coin_pos in level["coins"]:
+        coins.append(Coin.Coin(*coin_pos))
+    for enemy_pos in level["enemies"]:
+        enemies.append(Enemy.Enemy(*enemy_pos))
+    for barrel_info in level["barrels"]:
+        if len(barrel_info) == 2:
+            barrels.append(Barrel.Barrel(*barrel_info))
+        else:
+            barrels.append(Barrel.Barrel(*barrel_info[:2], loot_type = barrel_info[2]))
+
+    if level["sublevels"]:
+        if "up" in level["sublevels"]:
+            walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y <= 0)]
+            sublevels.append(("up", level["sublevels"]["up"]))
+        if "down" in level["sublevels"]:
+            walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y >= 550)]
+            sublevels.append(("down", level["sublevels"]["down"]))
+
+    if level["finishzoneX"]:
+        finishzone.rect.x, finishzone.rect.y = level["finishzoneX"], level["finishzoneY"]
+
+    start_position.append(level["playerstartX"])
+    start_position.append(level["playerstartY"])
+    player.rect.x, player.rect.y = level["playerstartX"], level["playerstartY"]
+    print(start_position_x, start_position_y)
+
+    for pos in start_position:
+        print(f"{pos}")
+    
+    print(level)
+
+load_level_from_db(1)
 
 def load_level(level_number):
     level = Levels.levels.get(level_number)
