@@ -1,21 +1,40 @@
 import sqlite3
 import databasemanager
+import levels 
 
 db_manager = databasemanager.DatabaseManager("game_database.db")
 
-#"spikes": [(500, 500), (200, 500), (325, 200)]
-db_manager.add_level(325, 250, 100, 100)
-db_manager.add_spike(1, 500, 500)
-db_manager.add_spike(1, 200, 500)
-db_manager.add_spike(1, 325, 200)
-db_manager.add_coin(1, 100, 250)
-db_manager.add_coin(1, 600, 105)
-db_manager.add_coin(1, 625, 450)
-db_manager.add_barrel(1, 300, 400)
-db_manager.add_barrel(1, 400, 400, 'heart')
-db_manager.add_enemy(1, 300, 300)
+def add_level_data(level_id, level_data):
 
-print(db_manager.get_spikes(1))
-print(db_manager.get_coins(1))
-print(db_manager.get_barrels(1))
-print(db_manager.get_barrels(1))
+    finishX = level_data.get("finishzoneX", None)
+    finishY = level_data.get("finishzoneY", None)
+
+    db_manager.add_level(
+        finishzoneX= finishX,
+        finishzoneY= finishY,
+        playerstartX= level_data["playerstartX"],
+        playerstartY= level_data["playerstartY"]
+    )
+
+    for spike in level_data["spikes"]:
+        db_manager.add_spike(level_id, spike[0], spike[1])
+    for coin in level_data["coins"]:
+        db_manager.add_coin(level_id, coin[0], coin[1])
+    for enemy in level_data["enemies"]:
+        db_manager.add_enemy(level_id, enemy[0], coin[1])
+    for barrel in level_data["barrels"]:
+        if len(barrel) == 3:
+            db_manager.add_barrel(level_id, barrel[0], barrel[1], barrel[2])
+        else:
+            db_manager.add_barrel(level_id, barrel[0], barrel[1])
+
+    for direction, target_level_id in level_data["sublevels"].items():
+        db_manager.add_sublevel(level_id, direction, target_level_id)
+
+
+for level_id, level_data in levels.levels.items():
+    add_level_data(level_id, level_data)
+
+
+
+db_manager.close()

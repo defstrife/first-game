@@ -59,8 +59,9 @@ class DatabaseManager:
         """)
         self.connection.commit()
 
-    def add_level(self, finishzoneX: int, finishzoneY: int, playerstartX: int, playerstartY: int) -> int:
-        self.cursor.execute("INSERT INTO levels (finishzoneX, finishzoneY, playerstartX, playerstartY) VALUES (?, ?, ?, ?)", (finishzoneX, finishzoneY, playerstartX, playerstartY))
+    def add_level(self, playerstartX: int, playerstartY: int, finishzoneX: int, finishzoneY: int) -> int:
+        self.cursor.execute("INSERT INTO levels (finishzoneX, finishzoneY, playerstartX, playerstartY) VALUES (?, ?, ?, ?)", 
+            (finishzoneX, finishzoneY, playerstartX, playerstartY))
         self.connection.commit()
     
     def add_spike(self, level_id: int, x: int, y: int) -> int:
