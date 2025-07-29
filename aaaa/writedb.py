@@ -1,13 +1,13 @@
 import sqlite3
 import databasemanager
-import levels 
+import levels
 
 db_manager = databasemanager.DatabaseManager("game_database.db")
 
 def add_level_data(level_id, level_data):
 
-    finishX = level_data.get("finishzoneX", None)
-    finishY = level_data.get("finishzoneY", None)
+    finishX = level_data.get("finishzoneX", 0)
+    finishY = level_data.get("finishzoneY", 0)
 
     db_manager.add_level(
         finishzoneX= finishX,

@@ -59,7 +59,7 @@ class DatabaseManager:
         """)
         self.connection.commit()
 
-    def add_level(self, playerstartX: int, playerstartY: int, finishzoneX: int, finishzoneY: int) -> int:
+    def add_level(self, playerstartX: int, playerstartY: int, finishzoneX: int=0, finishzoneY: int=0) -> int:
         self.cursor.execute("INSERT INTO levels (finishzoneX, finishzoneY, playerstartX, playerstartY) VALUES (?, ?, ?, ?)", 
             (finishzoneX, finishzoneY, playerstartX, playerstartY))
         self.connection.commit()
@@ -87,7 +87,7 @@ class DatabaseManager:
     def get_level(self, id: int):
         self.cursor.execute("SELECT * FROM levels where id = ?", (id,))
         level = self.cursor.fetchone()
-        return
+        return level
     
     def get_spikes(self, level_id: int):
         self.cursor.execute("SELECT x, y FROM spikes where level_id = ?", (level_id,))
@@ -108,6 +108,11 @@ class DatabaseManager:
         self.cursor.execute("SELECT x, y FROM enemies where level_id = ?", (level_id,))
         enemies = self.cursor.fetchall()
         return enemies
+    
+    def get_sublevels(self, level_id: int):
+        self.cursor.execute("SELECT direction, target_level_id FROM sublevels where level_id = ?", (level_id, ))
+        sublevels = self.cursor.fetchall()
+        return sublevels
 
     def close(self):
         self.connection.close()

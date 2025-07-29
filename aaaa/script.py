@@ -64,6 +64,7 @@ def load_level_from_db(level_number):
     barrels.clear()
     enemies.clear()
     start_position.clear()
+    finishzone = Finishzone.Finishzone(0, 0)
 
     for i in range(0, int(WIDTH/50)):
         walls.append(Wall.Wall(i*100, 0))
@@ -73,38 +74,44 @@ def load_level_from_db(level_number):
         walls.append(Wall.Wall(0, i*100))
         walls.append(Wall.Wall(800, i*100))
 
-    for spike_pos in level["spikes"]:
+    for spike_pos in db_manager.get_spikes(level_number):
         spikes.append(Spike.Spike(*spike_pos))
-    for coin_pos in level["coins"]:
+    for coin_pos in db_manager.get_coins(level_number):
         coins.append(Coin.Coin(*coin_pos))
-    for enemy_pos in level["enemies"]:
+    for enemy_pos in db_manager.get_enemies(level_number):
         enemies.append(Enemy.Enemy(*enemy_pos))
-    for barrel_info in level["barrels"]:
-        if len(barrel_info) == 2:
-            barrels.append(Barrel.Barrel(*barrel_info))
-        else:
-            barrels.append(Barrel.Barrel(*barrel_info[:2], loot_type = barrel_info[2]))
+    for barrel_info in db_manager.get_barrels(level_number):
+        barrels.append(Barrel.Barrel(*barrel_info))
 
-    if level["sublevels"]:
-        if "up" in level["sublevels"]:
+    #print(db_manager.get_sublevels(level_number))
+   
+
+    for direction, target_level_id in db_manager.get_sublevels(level_number):
+        print(direction, target_level_id)
+        if "up" in direction:
             walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y <= 0)]
-            sublevels.append(("up", level["sublevels"]["up"]))
-        if "down" in level["sublevels"]:
-            walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y >= 550)]
-            sublevels.append(("down", level["sublevels"]["down"]))
-
-    if level["finishzoneX"]:
-        finishzone.rect.x, finishzone.rect.y = level["finishzoneX"], level["finishzoneY"]
-
-    start_position.append(level["playerstartX"])
-    start_position.append(level["playerstartY"])
-    player.rect.x, player.rect.y = level["playerstartX"], level["playerstartY"]
-    print(start_position_x, start_position_y)
-
-    for pos in start_position:
-        print(f"{pos}")
+            print(walls)
+            sublevels.append((direction, target_level_id))
+        if "down" in direction:
+            walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y <= 550)]
+            sublevels.append((direction, target_level_id))
+        # if "left" in direction:
+        #     walls[:] = [wall for wall in walls if not (wall.rect.y >= 350 and wall.rect.y <= 450  and wall.rect.y <= 0)]
+        #     print(walls)
+        #     sublevels.append((direction, target_level_id))
+        # if "down" in direction:
+        #     walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y <= 550)]
+        #     sublevels.append((direction, target_level_id))
     
-    print(level)
+    # print(level_number)
+    # print(db_manager.get_level(level_number))
+
+    if db_manager.get_level(level_number)[1]:
+        finishzone.rect.x, finishzone.rect.y = level[1], level[2]
+
+    player.rect.x, player.rect.y = level[3], level[4]
+    start_position.append(level[3])
+    start_position.append(level[4]) 
 
 load_level_from_db(1)
 
@@ -142,6 +149,8 @@ def load_level(level_number):
         else:
             barrels.append(Barrel.Barrel(*barrel_info[:2], loot_type = barrel_info[2]))
 
+
+
     if level["sublevels"]:
         if "up" in level["sublevels"]:
             walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y <= 0)]
@@ -172,7 +181,7 @@ def damage(hearts):
         return hearts, False
     return hearts, True
 
-load_level(current_level)
+load_level_from_db(current_level)
 
 while running:
     screen.blit(background, (0, 0))
@@ -209,16 +218,16 @@ while running:
     for direction, level_number in sublevels:
         if direction == "up" and player.rect.y <= 0:
             current_level = level_number
-            load_level(current_level)
+            load_level_from_db(current_level)
         elif direction == "down" and player.rect.y >= HEIGHT - player.rect.height:
             current_level = level_number
-            load_level(current_level)
+            load_level_from_db(current_level)
         elif direction == "left" and player.rect.y <= 0:
             current_level = level_number
-            load_level(current_level)
+            load_level_from_db(current_level)
         elif direction == "right" and player.rect.y >= WIDTH - player.rect.height:
             current_level = level_number
-            load_level(current_level)
+            load_level_from_db(current_level)
 
     for spike in spikes:
         screen.blit(spike.image, (spike.rect.x, spike.rect.y))
@@ -240,6 +249,7 @@ while running:
         screen.blit(bomb.image, (bomb.rect.x, bomb.rect.y))
         if bomb.update():
             explosion_area = bomb.get_explosion_area()
+
 
             if player.rect.colliderect(explosion_area):
                 hearts, running = damage(hearts)
@@ -273,9 +283,10 @@ while running:
                 score += 1
             loot_list.remove(loot_item)
 
-
+    #print(enemies)
 
     for enemy in enemies:
+        #print(enemy)
         screen.blit(enemy.image, (enemy.rect.x, enemy.rect.y))
         enemy.move()
         if player.rect.colliderect(enemy.rect):
@@ -293,7 +304,7 @@ while running:
         screen.blit(score_text, (200, 300))
         current_level += 1
         try:
-            load_level(current_level)
+            load_level_from_db(current_level)
             score = 0
         except ValueError as e:
             print (e)
@@ -301,7 +312,9 @@ while running:
 
 
     if finishzone.the_end(enemies, coins):
-        screen.blit(finishzone.image, (finishzone.rect.x, finishzone.rect.y))
+        # print(finishzone.rect.x, finishzone.rect.y)
+        if finishzone.rect.x != 0 and finishzone.rect.y != 0:
+            screen.blit(finishzone.image, (finishzone.rect.x, finishzone.rect.y))
 
 
     screen.blit(player.image, (player.rect.x, player.rect.y))
