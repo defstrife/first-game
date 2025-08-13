@@ -93,15 +93,14 @@ def load_level_from_db(level_number):
             print(walls)
             sublevels.append((direction, target_level_id))
         if "down" in direction:
-            walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y <= 550)]
+            walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y >= 550)]
             sublevels.append((direction, target_level_id))
-        # if "left" in direction:
-        #     walls[:] = [wall for wall in walls if not (wall.rect.y >= 350 and wall.rect.y <= 450  and wall.rect.y <= 0)]
-        #     print(walls)
-        #     sublevels.append((direction, target_level_id))
-        # if "down" in direction:
-        #     walls[:] = [wall for wall in walls if not (wall.rect.x >= 350 and wall.rect.x <= 450  and wall.rect.y <= 550)]
-        #     sublevels.append((direction, target_level_id))
+        if "left" in direction:
+            walls[:] = [wall for wall in walls if not (wall.rect.y >= 250 and wall.rect.y <= 350  and wall.rect.x <= 0)]
+            sublevels.append((direction, target_level_id))
+        if "right" in direction:
+            walls[:] = [wall for wall in walls if not (wall.rect.y >= 250 and wall.rect.y <= 350  and wall.rect.x >= 800)]
+            sublevels.append((direction, target_level_id))
     
     # print(level_number)
     # print(db_manager.get_level(level_number))
